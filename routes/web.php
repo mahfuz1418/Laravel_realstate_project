@@ -32,11 +32,16 @@ Route::middleware('auth')->group(function () {
 
 require __DIR__.'/auth.php';
 
-// ADMIN MIDDLEWARE GROUP START
+// ADMIN ROUTE START
 Route::middleware(['auth', 'role:admin'])->group(function(){
     Route::get('/admin/dashboard', [AdminDashboard::class, 'AdminDashboard'])->name('admin.dashboard');
+    Route::get('/admin/logout', [AdminDashboard::class, 'AdminLogout'])->name('admin.logout');
+    Route::get('/admin/profile', [AdminDashboard::class, 'AdminProfile'])->name('admin.profile');
+    Route::post('/admin/profile/update', [AdminDashboard::class, 'AdminProfileUpdate'])->name('admin.profile.update');
 });
-// ADMIN MIDDLEWARE GROUP END
+Route::get('/admin/login', [AdminDashboard::class, 'AdminLogin'])->name('admin.login');
+// ADMIN ROUTE END
+
 
 // AGENT MIDDLEWARE GROUP START
 Route::middleware(['auth', 'role:agent'])->group(function(){
