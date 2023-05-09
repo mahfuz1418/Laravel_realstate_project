@@ -6,7 +6,9 @@ use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Intervention\Image\Facades\Image;
+use Illuminate\Support\Str;
 
 class AdminDashboard extends Controller
 {
@@ -39,11 +41,21 @@ class AdminDashboard extends Controller
     }
 
     public function AdminProfileUpdate(Request $request){
+
+        $request->validate([
+            'email' => 'email',
+            'phone' => 'min:11|max:15',
+        ]);
+
         $id = Auth::user()->id;
         $profileData = User::findOrFail($id);
 
+        $username = $request->username;
+        $username_lower = Str::lower($username); 
+        $username_remove_space = Str::replace(' ', '', $username_lower);
+
         User::find($id)->update([
-            'username' => $request->username,
+            'username' => $username_remove_space,
             'name' => $request->name,
             'email' => $request->email,
             'phone' => $request->phone,
@@ -60,6 +72,63 @@ class AdminDashboard extends Controller
             ]);
         }
 
-        return redirect()->back();
+        $notification = array(
+            'message' => 'Profile Updated Successfully',
+            'alert-type' => 'success',
+        );
+
+        return back()->with($notification);
+    }
+
+    public function AdminChangePassword(){
+        $id = Auth::user()->id;
+        $profileData = User::findOrFail($id);
+        return view('admin.admin_change_password', compact('profileData'));
+    }
+
+    public function AdminUpdatePassword(Request $request){
+        $id = Auth::user()->id;
+        $request->validate([
+            'old_password' => 'required',
+            'new_password' => 'required|confirmed',
+        ]);
+
+        if (!Hash::check($request->old_password, auth()->user()->password)) {
+            
+            $notification = array(
+                'message' => 'Old Password Does Not Match',
+                'alert-type' => 'error',
+            );
+
+            return back()->with($notification);
+        } 
+        // else {
+        //     if ($request->old_password === $request->new_password) {
+        //         $notification = array(
+        //             'message' => 'Old password and new password same!',
+        //             'alert-type' => 'error',
+        //         );
+    
+        //         return back()->with($notification);
+        //     } else {
+                
+        //     }
+            
+            
+        // }
+
+        User::find($id)->update([
+            'password' => Hash::make($request->new_password),
+        ]);
+
+        $notification = array(
+            'message' => 'Password Changed Successfully',
+            'alert-type' => 'success',
+        );
+
+        return back()->with($notification);
+     
+
+        
     }
 }
